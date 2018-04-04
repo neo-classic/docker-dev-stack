@@ -1,0 +1,58 @@
+version: '2'
+services:
+  data:
+    image: tianon/true
+    volumes:
+      - ./../www:/var/www
+      - ./mariadb/data:/var/lib/mysql
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./mongodb/data:/data/db
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+  nginx:
+    image: nginx:1.13.10-alpine
+    volumes_from:
+      - data
+    ports:
+      - 80:80
+      - 443:443
+    links:
+      - php
+  php:
+    build:
+      context: ./php
+      dockerfile: php-7.2.3-fpm-alpine.dockerfile
+    volumes_from:
+      - data
+    expose:
+      - 9000
+    links:
+      - mariadb
+      - mongodb
+      - elasticsearch
+  mariadb:
+    image: mariadb:10.3
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    volumes_from:
+      - data
+    env_file:
+      - ./mariadb/mariadb.config.env
+  mongodb:
+    image: mvertes/alpine-mongo
+    ports:
+      - 27017:27017
+    volumes_from:
+      - data
+  elasticsearch:
+    image: blacktop/elasticsearch:6.2
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes_from:
+      - data
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
