@@ -3,7 +3,7 @@ services:
   data:
     image: tianon/true
     volumes:
-      - ./../www:/var/www
+      - ./../../www:/var/www
       - ./mariadb/data:/var/lib/mysql
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/conf.d:/etc/nginx/conf.d
@@ -11,7 +11,7 @@ services:
       - ./elasticsearch/data:/usr/share/elasticsearch/data
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
   nginx:
-    image: nginx:1.13.10-alpine
+    image: nginx:alpine
     volumes_from:
       - data
     ports:
@@ -22,7 +22,7 @@ services:
   php:
     build:
       context: ./php
-      dockerfile: php-7.2.3-fpm-alpine.dockerfile
+      dockerfile: php-7.2-fpm-alpine.dockerfile
     volumes_from:
       - data
     expose:
@@ -32,7 +32,7 @@ services:
       - mongodb
       - elasticsearch
   mariadb:
-    image: mariadb:10.3
+    image: mariadb:latest
     ports:
       - 3306:3306
     expose:
@@ -42,13 +42,16 @@ services:
     env_file:
       - ./mariadb/mariadb.config.env
   mongodb:
-    image: mvertes/alpine-mongo
+    image: mongo:latest
     ports:
       - 27017:27017
     volumes_from:
       - data
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: pass
   elasticsearch:
-    image: blacktop/elasticsearch:6.2
+    image: blacktop/elasticsearch:6.3
     ports:
       - 9200:9200
       - 9300:9300
