@@ -2,9 +2,12 @@ FROM php:7.2-fpm-alpine
 
 COPY php.ini /usr/local/etc/php/
 
+COPY GeoIP/GeoLite2-City.mmdb /usr/share/GeoIP/
+RUN chmod +r /usr/share/GeoIP/GeoLite2-City.mmdb
+
 RUN apk add --update imagemagick-dev libmcrypt-dev autoconf g++ libtool make icu-dev libxml2-dev openssl openssl-dev
 
-RUN docker-php-ext-install pdo pdo_mysql mbstring iconv opcache mysqli xml
+RUN docker-php-ext-install pdo pdo_mysql mbstring iconv opcache mysqli xml xmlwriter zip
 
 RUN apk add --no-cache git freetype libpng libjpeg-turbo freetype-dev libpng-dev libjpeg-turbo-dev && \
   docker-php-ext-configure gd \
@@ -37,6 +40,13 @@ RUN mkdir /src && cd /src && git clone https://github.com/xdebug/xdebug.git \
     && echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.remote_connect_back=on" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.idekey=IDEA_DEBUG" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && cd  / && rm -fr /src
+
+RUN apk --no-cache add --update unzip wget make fastjar gcc gcc-java g++ \
+    && mkdir /src && cd /src && wget --no-check-certificate https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/pdftk-2.02-src.zip \
+    && unzip pdftk-2.02-src.zip \
+    && cd pdftk-2.02-dist/pdftk \
+    && make -f Makefile.Redhat && make -f Makefile.Redhat install \
     && cd  / && rm -fr /src
 
 RUN apk del --no-cache autoconf g++ libtool make && rm -rf /tmp/* /var/cache/apk/* /var/lib/apt/lists/*
